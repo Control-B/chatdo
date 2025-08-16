@@ -3,7 +3,7 @@ services:
   - name: api
     source_dir: /apps/api
     github:
-      repo: banjahmarah/chatdo
+      repo: Control-B/chatdo
       branch: main
     build_command: npm install && npm run db:generate && npm run build
     run_command: npm run db:migrate && npm start
@@ -46,7 +46,7 @@ services:
   - name: web
     source_dir: /apps/web
     github:
-      repo: banjahmarah/chatdo
+      repo: Control-B/chatdo
       branch: main
     build_command: npm install && npm run build
     run_command: npm start
