@@ -1,11 +1,12 @@
 name: chatdo
 services:
   - name: api
+    source_dir: /apps/api
     github:
       repo: Control-B/chatdo
       branch: main
-    build_command: npm run build:api
-    run_command: npm run start:api
+    build_command: cd ../../packages/shared && npm install && npm run build && cd ../../apps/api && npm install && npm run build
+    run_command: npm run db:generate && npm run db:migrate && npm start
     environment_slug: node-js
     instance_count: 1
     instance_size_slug: basic-xxs
@@ -43,10 +44,11 @@ services:
         value: ${CORS_ORIGIN}
 
   - name: web
+    source_dir: /apps/web
     github:
       repo: Control-B/chatdo
       branch: main
-    build_command: npm run build:web
+    build_command: npm install && npm run build
     run_command: npm start
     environment_slug: node-js
     instance_count: 1
