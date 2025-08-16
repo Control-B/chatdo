@@ -1,8 +1,18 @@
-packages/
+# Ignore development files
 node_modules/
 .git/
 .env
 *.log
+.DS_Store
+
+# Ignore build artifacts that shouldn't be deployed
 dist/
 build/
-.DS_Store
+coverage/
+
+# Ignore package manager files
+pnpm-lock.yaml
+yarn.lock
+
+# Ignore packages directory (if it exists)
+packages/
