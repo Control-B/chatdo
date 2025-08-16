@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "cd shared && npm install && npm run build && cd .. && tsc",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "db:migrate": "prisma migrate deploy",
@@ -17,7 +17,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@chatdo/shared": "file:../../packages/shared",
+    "@chatdo/shared": "file:./shared",
     "@prisma/client": "^5.7.1",
     "@socket.io/redis-adapter": "^8.3.0",
     "aws-sdk": "^2.1531.0",
