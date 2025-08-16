@@ -17,7 +17,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@chatdo/shared": "workspace:*",
+    "@chatdo/shared": "file:../../packages/shared",
     "@prisma/client": "^5.7.1",
     "@socket.io/redis-adapter": "^8.3.0",
     "aws-sdk": "^2.1531.0",
