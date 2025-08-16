@@ -100,7 +100,7 @@ export class SocketService {
       });
 
       // Join room (channel or DM)
-      socket.on("join_room", async (data: SocketEvents["join_room"]) => {
+      socket.on("join_room", async (data: any) => {
         try {
           const { roomId, roomType } = data;
 
@@ -277,7 +277,7 @@ export class SocketService {
             roomId,
             roomType,
             messageId,
-            readBy: readReceipts.map((rr) => ({
+            readBy: readReceipts.map((rr: any) => ({
               userId: rr.user.id,
               userName: rr.user.name,
               readAt: rr.lastSeenAt,

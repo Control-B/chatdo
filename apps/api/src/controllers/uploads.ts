@@ -5,8 +5,9 @@ import { logger } from "../config/logger";
 import {
   generatePresignedUrl,
   getFileUrl,
-  BUCKET_NAME,
-} from "../config/spaces";
+  CONTAINER_NAME,
+  deleteFile as deleteFileFromStorage,
+} from "../config/azureStorage";
 import { presignedUploadSchema } from "@chatdo/shared";
 
 export async function getPresignedUrl(req: Request, res: Response) {
@@ -202,13 +203,17 @@ export async function deleteFile(req: Request, res: Response) {
       });
     }
 
+    // Delete from Azure Blob Storage
+    const deleted = await deleteFileFromStorage(file.filename);
+    
+    if (!deleted) {
+      logger.warn("Failed to delete file from Azure storage", { fileId, filename: file.filename });
+    }
+
     // Delete file from database
     await prisma.file.delete({
       where: { id: fileId },
     });
-
-    // Note: In a production environment, you might want to also delete the file from Spaces
-    // This would require additional AWS SDK calls
 
     logger.info("File deleted successfully", { fileId, userId });
 
