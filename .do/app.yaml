@@ -2,8 +2,11 @@ name: chatdo
 services:
   - name: api
     source_dir: /apps/api
-    build_command: npm install && npm run build
-    run_command: npm start
+    github:
+      repo: banjahmarah/chatdo
+      branch: main
+    build_command: npm install && npm run db:generate && npm run build
+    run_command: npm run db:migrate && npm start
     environment_slug: node-js
     instance_count: 1
     instance_size_slug: basic-xxs
@@ -42,6 +45,9 @@ services:
 
   - name: web
     source_dir: /apps/web
+    github:
+      repo: banjahmarah/chatdo
+      branch: main
     build_command: npm install && npm run build
     run_command: npm start
     environment_slug: node-js
