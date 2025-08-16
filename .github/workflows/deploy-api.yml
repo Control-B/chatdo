@@ -1,0 +1,82 @@
+name: Deploy API to Azure Web App
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'apps/api/**'
+      - 'packages/shared/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: chatdo-api
+  NODE_VERSION: '18.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: |
+          apps/api/package-lock.json
+          packages/shared/package-lock.json
+    
+    - name: Install dependencies for shared package
+      run: |
+        cd packages/shared
+        npm install
+        npm run build
+        
+    - name: Install dependencies for API
+      run: |
+        cd apps/api
+        npm install
+        
+    - name: Generate Prisma client
+      run: |
+        cd apps/api
+        npx prisma generate
+        
+    - name: Build API
+      run: |
+        cd apps/api
+        npm run build
+        
+    - name: Run tests
+      run: |
+        cd apps/api
+        npm test
+      continue-on-error: true
+        
+    - name: Create deployment package
+      run: |
+        mkdir -p deployment
+        cp -r apps/api/dist deployment/
+        cp -r apps/api/node_modules deployment/
+        cp -r apps/api/prisma deployment/
+        cp apps/api/package*.json deployment/
+        
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: ./deployment
+        startup-command: 'npx prisma migrate deploy && node dist/index.js'
+        
+    - name: Azure logout
+      run: |
+        az logout
+      if: always()

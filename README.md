@@ -8,7 +8,7 @@ A modern, real-time messaging platform built with Next.js, Express, Socket.IO, a
 - **Workspace management** with role-based access control
 - **Public and private channels**
 - **Direct messaging** with thread support
-- **File uploads** via DigitalOcean Spaces
+- **File uploads** via Azure Blob Storage
 - **Typing indicators** and read receipts
 - **User presence** and status updates
 - **Message threads** and replies
@@ -139,7 +139,29 @@ The application will be available at:
 
 ## 🚀 Production Deployment
 
-### DigitalOcean App Platform
+### Azure Cloud Platform
+
+ChatDO supports deployment to Microsoft Azure with full infrastructure automation.
+
+1. **Deploy Infrastructure**:
+   ```bash
+   # Run the Azure deployment script
+   ./azure/deploy.sh
+   ```
+
+2. **Configure CI/CD**:
+   - Set up GitHub repository secrets (see [deployment-guide.md](deployment-guide.md))
+   - Push to main branch to trigger automatic deployments
+
+3. **Access Your Application**:
+   - API: `https://your-api.azurewebsites.net`
+   - Web: `https://your-app.azurestaticapps.net`
+
+For detailed instructions, see [deployment-guide.md](deployment-guide.md).
+
+### DigitalOcean App Platform (Legacy)
+
+The original DigitalOcean deployment is still supported but deprecated in favor of Azure.
 
 1. **Create DigitalOcean Resources**:
 
@@ -324,4 +346,6 @@ For support and questions:
 - [ ] Mobile app (React Native)
 - [ ] Video/audio calls
 - [ ] Advanced admin features
+- [ ] Analytics dashboard
+admin features
 - [ ] Analytics dashboard

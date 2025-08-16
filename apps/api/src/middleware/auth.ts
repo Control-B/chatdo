@@ -84,7 +84,7 @@ export function requireWorkspaceAccess(
 
       // Check role permissions
       const roleHierarchy = { owner: 3, admin: 2, member: 1 };
-      const userRoleLevel = roleHierarchy[membership.role];
+      const userRoleLevel = roleHierarchy[membership.role as keyof typeof roleHierarchy];
       const requiredRoleLevel = roleHierarchy[requiredRole];
 
       if (userRoleLevel < requiredRoleLevel) {
