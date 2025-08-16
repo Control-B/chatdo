@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "ChatDO - Real-time chat application",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "npm run build:api && npm run build:web",
     "build:api": "cd apps/api && npm install && npm run build",
