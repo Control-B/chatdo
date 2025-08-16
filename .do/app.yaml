@@ -5,8 +5,7 @@ services:
     github:
       repo: Control-B/chatdo
       branch: main
-    build_command: npm install && npm run build
-    run_command: npm run db:generate && npm run db:migrate && npm start
+    dockerfile_path: Dockerfile
     environment_slug: node-js
     instance_count: 1
     instance_size_slug: basic-xxs
@@ -48,8 +47,7 @@ services:
     github:
       repo: Control-B/chatdo
       branch: main
-    build_command: npm install && npm run build
-    run_command: npm start
+    dockerfile_path: Dockerfile
     environment_slug: node-js
     instance_count: 1
     instance_size_slug: basic-xxs
