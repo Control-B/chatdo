@@ -1,25 +1,24 @@
 {
   "name": "chatdo",
   "version": "1.0.0",
-  "description": "Slack-like messaging platform built with Next.js, Express, and Socket.IO",
+  "description": "ChatDO - Real-time chat application",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
-    "build": "pnpm --filter api build && pnpm --filter web build",
-    "lint": "pnpm --filter api lint && pnpm --filter web lint",
-    "test": "pnpm --filter api test && pnpm --filter web test",
-    "db:migrate": "pnpm --filter api db:migrate",
-    "db:seed": "pnpm --filter api db:seed",
-    "db:studio": "pnpm --filter api db:studio",
-    "clean": "pnpm --filter api clean && pnpm --filter web clean"
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "cd apps/api && npm install && npm run db:generate && npm run build",
+    "build:web": "cd apps/web && npm install && npm run build",
+    "start": "cd apps/web && npm start",
+    "start:api": "cd apps/api && npm run db:migrate && npm start",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "install:all": "npm install && cd apps/api && npm install && cd ../web && npm install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "typescript": "^5.3.3"
+    "concurrently": "^8.2.2"
   },
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "packageManager": "pnpm@8.15.0"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
