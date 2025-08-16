@@ -1,0 +1,106 @@
+name: chatdo
+services:
+  - name: api
+    source_dir: /apps/api
+    github:
+      repo: your-username/chatdo
+      branch: main
+    build_command: npm install && npm run build
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 3001
+    health_check:
+      http_path: /healthz
+      initial_delay_seconds: 10
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        type: SECRET
+      - key: REDIS_URL
+        value: ${redis.REDIS_URL}
+        type: SECRET
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+        type: SECRET
+      - key: SPACES_KEY
+        value: ${SPACES_KEY}
+        type: SECRET
+      - key: SPACES_SECRET
+        value: ${SPACES_SECRET}
+        type: SECRET
+      - key: SPACES_REGION
+        value: ${SPACES_REGION}
+      - key: SPACES_BUCKET
+        value: ${SPACES_BUCKET}
+      - key: CORS_ORIGIN
+        value: ${CORS_ORIGIN}
+
+  - name: web
+    source_dir: /apps/web
+    github:
+      repo: your-username/chatdo
+      branch: main
+    build_command: npm install && npm run build
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 3000
+    health_check:
+      http_path: /
+      initial_delay_seconds: 10
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: ${api.URL}
+      - key: NEXTAUTH_URL
+        value: ${web.URL}
+      - key: NEXTAUTH_SECRET
+        value: ${NEXTAUTH_SECRET}
+        type: SECRET
+
+databases:
+  - name: db
+    engine: PG
+    version: "15"
+    size: db-s-1vcpu-1gb
+    region: nyc1
+
+  - name: redis
+    engine: REDIS
+    version: "7"
+    size: db-s-1vcpu-1gb
+    region: nyc1
+
+envs:
+  - key: JWT_SECRET
+    value: your-super-secret-jwt-key-here-change-this-in-production
+    type: SECRET
+  - key: SPACES_KEY
+    value: your-spaces-access-key
+    type: SECRET
+  - key: SPACES_SECRET
+    value: your-spaces-secret-key
+    type: SECRET
+  - key: SPACES_REGION
+    value: nyc3
+  - key: SPACES_BUCKET
+    value: chatdo-files
+  - key: CORS_ORIGIN
+    value: https://your-app-url.ondigitalocean.app
+  - key: NEXTAUTH_SECRET
+    value: your-nextauth-secret-key-here-change-this-in-production
+    type: SECRET
