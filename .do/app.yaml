@@ -2,9 +2,6 @@ name: chatdo
 services:
   - name: api
     source_dir: /apps/api
-    github:
-      repo: your-username/chatdo
-      branch: main
     build_command: npm install && npm run build
     run_command: npm start
     environment_slug: node-js
@@ -45,9 +42,6 @@ services:
 
   - name: web
     source_dir: /apps/web
-    github:
-      repo: your-username/chatdo
-      branch: main
     build_command: npm install && npm run build
     run_command: npm start
     environment_slug: node-js
