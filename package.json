@@ -4,8 +4,7 @@
   "description": "ChatDO - Real-time chat application",
   "private": true,
   "scripts": {
-    "build": "npm run build:shared && npm run build:api && npm run build:web",
-    "build:shared": "cd packages/shared && npm install && npm run build",
+    "build": "npm run build:api && npm run build:web",
     "build:api": "cd apps/api && npm install && npm run build",
     "build:web": "cd apps/web && npm install && npm run build",
     "start": "cd apps/web && npm start",
@@ -13,7 +12,7 @@
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:api": "cd apps/api && npm run dev",
     "dev:web": "cd apps/web && npm run dev",
-    "install:all": "npm install && cd packages/shared && npm install && cd ../../apps/api && npm install && cd ../web && npm install"
+    "install:all": "npm install && cd apps/api && npm install && cd ../web && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
