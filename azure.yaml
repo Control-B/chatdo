@@ -1,0 +1,17 @@
+name: chatdo
+metadata:
+  template: chatdo
+services:
+  api:
+    project: ./apps/api
+    language: js
+    host: appservice
+  web:
+    project: ./apps/web
+    language: js
+    host: appservice
+    config:
+      path: ./apps/web
+infra:
+  provider: bicep
+  path: ./azure

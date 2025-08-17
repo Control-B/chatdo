@@ -1,35 +1,51 @@
+targetScope = 'resourceGroup'
+@description('Environment name for resource token format (AZD env)')
+param environmentName string
 @description('The name of the application')
 param appName string = 'chatdo'
 
 @description('The location for all resources')
 param location string = resourceGroup().location
 
+
 @description('Environment name (dev, staging, prod)')
 param environment string = 'prod'
 
 @description('PostgreSQL administrator login')
-param administratorLogin string
+param administratorLogin string = 'chatdoadmin'
 
 @description('PostgreSQL administrator password')
 @secure()
-param administratorPassword string
+param administratorPassword string = ''
 
 @description('JWT secret for the application')
 @secure()
-param jwtSecret string
+param jwtSecret string = ''
 
 @description('NextAuth secret for the frontend')
 @secure()
-param nextAuthSecret string
+param nextAuthSecret string = ''
 
-// Generate unique names
-var uniqueSuffix = uniqueString(resourceGroup().id)
-var appServicePlanName = '${appName}-asp-${environment}-${uniqueSuffix}'
-var webAppName = '${appName}-api-${environment}-${uniqueSuffix}'
-var staticWebAppName = '${appName}-web-${environment}-${uniqueSuffix}'
-var postgresServerName = '${appName}-postgres-${environment}-${uniqueSuffix}'
-var redisName = '${appName}-redis-${environment}-${uniqueSuffix}'
-var storageAccountName = '${appName}storage${environment}${uniqueSuffix}'
+// Generate secure defaults when not provided
+var actualAdminPassword = empty(administratorPassword) ? '${uniqueString(subscription().id, resourceGroup().id)}Admin!123' : administratorPassword
+var actualJwtSecret = empty(jwtSecret) ? uniqueString(subscription().id, resourceGroup().id, 'jwt') : jwtSecret
+var actualNextAuthSecret = empty(nextAuthSecret) ? uniqueString(subscription().id, resourceGroup().id, 'nextauth') : nextAuthSecret
+
+// Generate unique names using recommended resource token format
+var uniqueSuffix = uniqueString(subscription().id, resourceGroup().id, location, environmentName)
+var appServicePlanName = '${appName}-asp-${environmentName}-${uniqueSuffix}'
+var webAppName = '${appName}-api-${environmentName}-${uniqueSuffix}'
+var webFrontendName = '${appName}-web-${environmentName}-${uniqueSuffix}'
+var postgresServerName = '${appName}-postgres-${environmentName}-${uniqueSuffix}'
+var redisName = '${appName}-redis-${environmentName}-${uniqueSuffix}'
+// Storage account names must be 3-24 chars, lowercase letters and numbers only
+var storageUnique = toLower(uniqueString(subscription().id, resourceGroup().id, environmentName))
+var storageAccountName = 'chatdostg${substring(storageUnique, 0, 10)}'
+// User-assigned managed identity
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${appName}-identity-${environment}-${uniqueSuffix}'
+  location: location
+}
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
@@ -39,8 +55,8 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
     reserved: true
   }
   sku: {
-    name: 'B1'
-    tier: 'Basic'
+  name: 'S1'
+  tier: 'Standard'
   }
   kind: 'linux'
 }
@@ -55,7 +71,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' =
   }
   properties: {
     administratorLogin: administratorLogin
-    administratorLoginPassword: administratorPassword
+    administratorLoginPassword: actualAdminPassword
     version: '15'
     storage: {
       storageSizeGB: 32
@@ -178,10 +194,20 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
 resource webApp 'Microsoft.Web/sites@2022-03-01' = {
   name: webAppName
   location: location
+  tags: {
+    'azd-service-name': 'api'
+    'azd-env-name': environmentName
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity.id}': {}
+    }
+  }
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'NODE|18-lts'
+  linuxFxVersion: 'NODE|20-lts'
       alwaysOn: true
       appSettings: [
         {
@@ -190,7 +216,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'DATABASE_URL'
-          value: 'postgresql://${administratorLogin}:${administratorPassword}@${postgresServer.properties.fullyQualifiedDomainName}:5432/chatdo?sslmode=require'
+          value: 'postgresql://${administratorLogin}:${actualAdminPassword}@${postgresServer.properties.fullyQualifiedDomainName}:5432/chatdo?sslmode=require'
         }
         {
           name: 'REDIS_URL'
@@ -198,7 +224,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'JWT_SECRET'
-          value: jwtSecret
+          value: actualJwtSecret
         }
         {
           name: 'AZURE_STORAGE_CONNECTION_STRING'
@@ -214,7 +240,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'CORS_ORIGIN'
-          value: 'https://${staticWebAppName}.azurestaticapps.net'
+          value: 'https://${webFrontendName}.azurewebsites.net'
         }
         {
           name: 'PORT'
@@ -226,37 +252,71 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
   }
 }
 
-// Static Web App for Frontend
-resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
-  name: staticWebAppName
+// Frontend Web App (Next.js SSR)
+resource webFrontend 'Microsoft.Web/sites@2022-03-01' = {
+  name: webFrontendName
   location: location
+  tags: {
+    'azd-service-name': 'web'
+    'azd-env-name': environmentName
+  }
   properties: {
-    buildProperties: {
-      appLocation: '/apps/web'
-      outputLocation: 'out'
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: 'NODE|20-lts'
+      alwaysOn: true
+      appSettings: [
+        {
+          name: 'NODE_ENV'
+          value: 'production'
+        }
+        {
+          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
+          value: 'true'
+        }
+        {
+          name: 'NPM_CONFIG_PRODUCTION'
+          value: 'false'
+        }
+        {
+          name: 'NEXT_TELEMETRY_DISABLED'
+          value: '1'
+        }
+        {
+          name: 'NODE_OPTIONS'
+          value: '--max-old-space-size=2048'
+        }
+        {
+          name: 'NEXT_PUBLIC_API_URL'
+          value: 'https://${webAppName}.azurewebsites.net'
+        }
+        {
+          name: 'NEXTAUTH_URL'
+          value: 'https://${webFrontendName}.azurewebsites.net'
+        }
+        {
+          name: 'NEXTAUTH_SECRET'
+          value: actualNextAuthSecret
+        }
+        {
+          name: 'PORT'
+          value: '3000'
+        }
+        {
+          name: 'WEBSITES_PORT'
+          value: '3000'
+        }
+      ]
     }
-  }
-  sku: {
-    name: 'Free'
-    tier: 'Free'
-  }
-}
-
-// Static Web App Environment Variables
-resource staticWebAppSettings 'Microsoft.Web/staticSites/config@2022-03-01' = {
-  parent: staticWebApp
-  name: 'appsettings'
-  properties: {
-    NEXT_PUBLIC_API_URL: 'https://${webApp.properties.defaultHostName}'
-    NEXTAUTH_URL: 'https://${staticWebApp.properties.defaultHostname}'
-    NEXTAUTH_SECRET: nextAuthSecret
+    httpsOnly: true
   }
 }
 
 // Outputs
-output apiUrl string = 'https://${webApp.properties.defaultHostName}'
-output webUrl string = 'https://${staticWebApp.properties.defaultHostname}'
+output apiUrl string = 'https://${webAppName}.azurewebsites.net'
+output webUrl string = 'https://${webFrontendName}.azurewebsites.net'
 output postgresHost string = postgresServer.properties.fullyQualifiedDomainName
 output redisHost string = redisCache.properties.hostName
 output storageAccountName string = storageAccount.name
 output resourceGroupName string = resourceGroup().name
+output RESOURCE_GROUP_ID string = resourceGroup().id // Resource group ID required for AZD

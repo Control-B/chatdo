@@ -195,9 +195,9 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-900 text-white pb-20 md:pb-0">
       {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 p-6">
+  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link

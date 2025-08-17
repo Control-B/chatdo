@@ -27,7 +27,7 @@ export default function DMsPage() {
       id: 3,
       name: "Mike Mechanic",
       avatar: "MM",
-      lastMessage: "Vehicle inspection completed. All systems are good.",
+  lastMessage: "Vehicle inspection completed. All checks are good.",
       timestamp: "1 hour ago",
       unread: 5,
       online: false,

@@ -135,14 +135,14 @@ export class SocketService {
       });
 
       // Leave room
-      socket.on("leave_room", (data: SocketEvents["leave_room"]) => {
+      socket.on("leave_room", (data: any) => {
         const { roomId } = data;
         socket.leave(`room:${roomId}`);
         logger.info("User left room", { userId: user.id, roomId });
       });
 
       // Send message
-      socket.on("message_send", async (data: SocketEvents["message_send"]) => {
+      socket.on("message_send", async (data: any) => {
         try {
           const {
             roomId,
@@ -161,26 +161,34 @@ export class SocketService {
           }
 
           // Create message in database
+          const messageData: any = {
+            roomType,
+            authorId: user.id,
+            content,
+            parentId,
+            attachments: attachments
+              ? {
+                  create: attachments.map((att: any) => ({
+                    filename: att.filename,
+                    originalName: att.originalName,
+                    mimeType: att.mimeType,
+                    size: att.size,
+                    url: att.url,
+                    thumbnailUrl: att.thumbnailUrl,
+                  })),
+                }
+              : undefined,
+          };
+
+          // Set the correct room field based on room type
+          if (roomType === "channel") {
+            messageData.channelId = roomId;
+          } else {
+            messageData.dmThreadId = roomId;
+          }
+
           const message = await prisma.message.create({
-            data: {
-              roomId,
-              roomType,
-              authorId: user.id,
-              content,
-              parentId,
-              attachments: attachments
-                ? {
-                    create: attachments.map((att) => ({
-                      filename: att.filename,
-                      originalName: att.originalName,
-                      mimeType: att.mimeType,
-                      size: att.size,
-                      url: att.url,
-                      thumbnailUrl: att.thumbnailUrl,
-                    })),
-                  }
-                : undefined,
-            },
+            data: messageData,
             include: {
               author: {
                 select: {
@@ -213,7 +221,7 @@ export class SocketService {
       });
 
       // Typing indicators
-      socket.on("typing_start", (data: SocketEvents["typing_start"]) => {
+      socket.on("typing_start", (data: any) => {
         const { roomId, roomType } = data;
         socket.to(`room:${roomId}`).emit("typing", {
           roomId,
@@ -223,7 +231,7 @@ export class SocketService {
         });
       });
 
-      socket.on("typing_stop", (data: SocketEvents["typing_stop"]) => {
+      socket.on("typing_stop", (data: any) => {
         const { roomId, roomType } = data;
         socket.to(`room:${roomId}`).emit("typing", {
           roomId,
@@ -235,28 +243,37 @@ export class SocketService {
       });
 
       // Read receipts
-      socket.on("receipt_ack", async (data: SocketEvents["receipt_ack"]) => {
+      socket.on("receipt_ack", async (data: any) => {
         try {
           const { roomId, roomType, messageId } = data;
 
+          // Determine the correct field based on room type
+          const whereClause =
+            roomType === "channel"
+              ? { channelId_userId: { channelId: roomId, userId: user.id } }
+              : { dmThreadId_userId: { dmThreadId: roomId, userId: user.id } };
+
+          const createData: any = {
+            userId: user.id,
+            messageId,
+            roomType,
+            lastSeenAt: new Date(),
+          };
+
+          if (roomType === "channel") {
+            createData.channelId = roomId;
+          } else {
+            createData.dmThreadId = roomId;
+          }
+
           // Update read receipt
           await prisma.readReceipt.upsert({
-            where: {
-              roomId_userId: {
-                roomId,
-                userId: user.id,
-              },
-            },
+            where: whereClause,
             update: {
               messageId,
               lastSeenAt: new Date(),
             },
-            create: {
-              roomId,
-              userId: user.id,
-              messageId,
-              lastSeenAt: new Date(),
-            },
+            create: createData,
           });
 
           // Get all read receipts for this message
@@ -289,7 +306,8 @@ export class SocketService {
       });
 
       // Presence
-      socket.on("presence_ping", (data: SocketEvents["presence_ping"]) => {
+      // Presence ping
+      socket.on("presence_ping", (data: any) => {
         const { status } = data;
         // Broadcast presence to workspace
         socket.broadcast.emit("presence", {

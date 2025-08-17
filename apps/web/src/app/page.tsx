@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import MobileNavigation from "@/components/mobile-navigation";
+// MobileNavigation is rendered globally via GlobalMobileNavigation in layout
+// import MobileNavigation from "@/components/mobile-navigation";
 import SignaturePad from "@/components/signature-pad";
 
 export default function Home() {
@@ -11,18 +12,20 @@ export default function Home() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // State for messages
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Welcome to ChatDO! 🚛",
-      user: "System",
-      timestamp: "12:00 PM",
-    },
-  ]);
+  const [messages, setMessages] = useState<any[]>([]);
 
   // State for UI
   const [newMessage, setNewMessage] = useState("");
-  const [channels, setChannels] = useState([
+  type Channel = {
+    id: number;
+    name: string;
+    description: string;
+    visibility: "public" | "private";
+    doorNumber: string;
+    unread: number;
+    active: boolean;
+  };
+  const [channels, setChannels] = useState<Channel[]>([
     {
       id: 1,
       name: "general",
@@ -88,7 +91,14 @@ export default function Home() {
     },
   ]);
 
-  const [directMessages, setDirectMessages] = useState([
+  type DMListItem = {
+    id: number;
+    name: string;
+    avatar: string;
+    unread: number;
+    phone: string;
+  };
+  const [directMessages, setDirectMessages] = useState<DMListItem[]>([
     {
       id: 1,
       name: "John Driver",
@@ -149,21 +159,23 @@ export default function Home() {
   const [showCreateDMModal, setShowCreateDMModal] = useState(false);
   const [showDeleteChannelModal, setShowDeleteChannelModal] = useState(false);
   const [showDeleteDMModal, setShowDeleteDMModal] = useState(false);
-  const [channelToDelete, setChannelToDelete] = useState(null);
-  const [dmToDelete, setDmToDelete] = useState(null);
+  const [channelToDelete, setChannelToDelete] = useState<Channel | null>(null);
+  const [dmToDelete, setDmToDelete] = useState<DMListItem | null>(null);
   const [showChannelContextMenu, setShowChannelContextMenu] = useState(false);
   const [showDMContextMenu, setShowDMContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
   });
-  const [contextMenuChannel, setContextMenuChannel] = useState(null);
-  const [contextMenuDM, setContextMenuDM] = useState(null);
+  const [contextMenuChannel, setContextMenuChannel] = useState<Channel | null>(
+    null
+  );
+  const [contextMenuDM, setContextMenuDM] = useState<DMListItem | null>(null);
 
   // Channel Details Modal State
   const [showChannelDetails, setShowChannelDetails] = useState(false);
   const [selectedChannelForDetails, setSelectedChannelForDetails] =
-    useState(null);
+    useState<Channel | null>(null);
   const [channelDetailsTab, setChannelDetailsTab] = useState("about");
   const [showSettings, setShowSettings] = useState(false);
   const [showPushToTalk, setShowPushToTalk] = useState(false);
@@ -616,7 +628,7 @@ export default function Home() {
         setSelectedSignature({ name: item.name, dataUrl: item.dataUrl });
         break;
       case "dm":
-        setCurrentDM(item.name);
+        setCurrentDM({ id: item.id, name: item.name });
         setCurrentChannel(null);
         break;
       case "help":
@@ -681,7 +693,7 @@ export default function Home() {
       setShowDMContextMenu(false);
     };
 
-    const handleEscapeKey = (e) => {
+    const handleEscapeKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setShowChannelContextMenu(false);
         setShowDMContextMenu(false);
@@ -718,9 +730,13 @@ export default function Home() {
 
   // State for right panel (member drawer)
   const [showMemberPanel, setShowMemberPanel] = useState(false);
+  // Mobile-only menu state
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // State for current chat
-  const [currentChannel, setCurrentChannel] = useState("general");
+  const [currentChannel, setCurrentChannel] = useState<string | null>(
+    "general"
+  );
 
   // Mock member data for current channel
   const channelMembers = [
@@ -757,17 +773,38 @@ export default function Home() {
       isCurrentUser: false,
     },
   ];
-  const [currentDM, setCurrentDM] = useState(null);
-  const [channelMessages, setChannelMessages] = useState({
-    general: [
-      {
-        id: 1,
-        text: "Welcome to the general channel! 🚛",
-        user: "System",
-        timestamp: "12:00 PM",
-      },
-    ],
+  const [currentDM, setCurrentDM] = useState<{
+    id: number;
+    name: string;
+    avatar?: string;
+    unread?: number;
+    phone?: string;
+    status?: "online" | "away" | "offline";
+  } | null>(null);
+  type ChatMessage = {
+    id: number;
+    text: string;
+    user: string;
+    timestamp: string;
+  };
+  const [channelMessages, setChannelMessages] = useState<
+    Record<string, ChatMessage[]>
+  >({
+  // No seeded system messages
   });
+
+  // Clean up any system messages on component mount
+  useEffect(() => {
+    setChannelMessages((prev) => {
+      const cleaned: Record<string, ChatMessage[]> = {};
+      Object.keys(prev).forEach((channelId) => {
+        cleaned[channelId] = prev[channelId].filter(
+          (msg) => msg.user?.toLowerCase?.() !== "system"
+        );
+      });
+      return cleaned;
+    });
+  }, []);
 
   // State for documents
   const [documents, setDocuments] = useState([
@@ -794,9 +831,9 @@ export default function Home() {
   const [recordingTime, setRecordingTime] = useState(0);
 
   // Refs
-  const messagesEndRef = useRef(null);
-  const moreMenuRef = useRef(null);
-  const settingsRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
+  const settingsRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -875,12 +912,12 @@ export default function Home() {
     );
   };
 
-  const openChannelDetails = (channel: any) => {
+  const openChannelDetails = (channel: Channel) => {
     setSelectedChannelForDetails(channel);
     setShowChannelDetails(true);
   };
 
-  const switchToDM = (dm: any) => {
+  const switchToDM = (dm: DMListItem) => {
     setCurrentDM(dm);
     setCurrentChannel(null);
     setDirectMessages(
@@ -889,7 +926,7 @@ export default function Home() {
   };
 
   // Delete functions
-  const handleDeleteChannel = (channel: any) => {
+  const handleDeleteChannel = (channel: Channel) => {
     setChannelToDelete(channel);
     setShowDeleteChannelModal(true);
   };
@@ -907,7 +944,7 @@ export default function Home() {
     }
   };
 
-  const handleDeleteDM = (dm: any) => {
+  const handleDeleteDM = (dm: DMListItem) => {
     setDmToDelete(dm);
     setShowDeleteDMModal(true);
   };
@@ -926,21 +963,35 @@ export default function Home() {
   };
 
   // Context menu functions
-  const handleChannelContextMenu = (e, channel) => {
+  const handleChannelContextMenu = (
+    e: React.MouseEvent<HTMLDivElement>,
+    channel: any
+  ) => {
     e.preventDefault();
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setContextMenuChannel(channel);
     setShowChannelContextMenu(true);
   };
 
-  const handleDMContextMenu = (e, dm) => {
+  const handleDMContextMenu = (
+    e: React.MouseEvent<HTMLDivElement>,
+    dm: any
+  ) => {
     e.preventDefault();
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setContextMenuDM(dm);
     setShowDMContextMenu(true);
   };
 
-  const handleContextMenuAction = (action) => {
+  type ChannelContextAction =
+    | "view-details"
+    | "copy"
+    | "mute"
+    | "notifications"
+    | "star"
+    | "leave"
+    | "delete";
+  const handleContextMenuAction = (action: ChannelContextAction) => {
     if (!contextMenuChannel) return;
 
     switch (action) {
@@ -971,7 +1022,14 @@ export default function Home() {
     setShowChannelContextMenu(false);
   };
 
-  const handleDMContextMenuAction = (action) => {
+  type DMContextAction =
+    | "view-profile"
+    | "copy"
+    | "mute"
+    | "notifications"
+    | "star"
+    | "delete";
+  const handleDMContextMenuAction = (action: DMContextAction) => {
     if (!contextMenuDM) return;
 
     switch (action) {
@@ -1210,8 +1268,29 @@ export default function Home() {
     setShowDocumentManager(true);
   };
 
+  // Mobile: open hamburger menu and close other floating UI
+  const openMobileMenu = () => {
+    setShowMoreMenu(false);
+    setShowSettings(false);
+    setShowSignatureDropdown(false);
+    setShowDocumentManager(false);
+    setShowSignaturePad(false);
+    setShowGlobalSearch(false);
+    setShowChannelDetails(false);
+    setShowDMContextMenu(false);
+    setShowChannelContextMenu(false);
+    setShowDeleteChannelModal(false);
+    setShowDeleteDMModal(false);
+    setShowCreateChannelModal(false);
+    setShowCreateDMModal(false);
+    setShowAttachmentMenu(false);
+    setShowMobileMenu(true);
+  };
+
   return (
     <div className="h-screen bg-slate-900 text-white flex flex-col md:flex-row">
+  {/* Mobile Top Bar hidden per spec (use only hamburger via bottom More) */}
+  <div className="hidden" />
       {/* Sidebar - Hidden on mobile, visible on desktop */}
       <div
         className={`hidden md:flex ${
@@ -1732,25 +1811,23 @@ export default function Home() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col md:flex-1">
-        {/* Header */}
-        <div className="h-12 bg-slate-800 border-b border-slate-700 flex items-center px-4">
+        {/* Desktop Header (hidden on mobile) */}
+        <div className="hidden md:flex h-12 bg-slate-800 border-b border-slate-700 items-center px-4">
           <div className="flex items-center space-x-3">
             <div>
               <div className="flex items-center space-x-4 text-sm text-slate-400">
-                <p>
-                  {currentChannel
-                    ? `Welcome to the `
-                    : currentDM
-                    ? `Direct message with `
-                    : "Welcome to the "}
-                  <span className="font-bold text-white">
-                    {currentChannel || (currentDM ? currentDM.name : "general")}
-                  </span>
-                  {currentChannel
-                    ? ` channel`
-                    : currentDM
-                    ? ""
-                    : " discussion channel"}
+                <p className="text-white">
+                  {currentChannel ? (
+                    <>
+                      <span className="font-bold"># {currentChannel}</span>
+                    </>
+                  ) : currentDM ? (
+                    <>
+                      <span className="font-bold">{currentDM.name}</span>
+                    </>
+                  ) : (
+                    <span className="font-bold"># general</span>
+                  )}
                 </p>
                 {currentChannel &&
                   channels.find((c) => c.name === currentChannel)
@@ -1838,45 +1915,45 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 pb-20 md:pb-4">
+  {/* Messages */}
+  <div className="flex-1 overflow-y-auto px-2 py-4 md:p-6 space-y-4 md:space-y-6 pb-20 md:pb-4 pt-2 md:pt-0">
           {(currentChannel
-            ? channelMessages[currentChannel] || []
-            : messages
+            ? (channelMessages[currentChannel] || []).filter(
+                (m) => m.user?.toLowerCase?.() !== "system"
+              )
+            : messages.filter((m) => m.user?.toLowerCase?.() !== "system")
           ).map((message) => (
-            <div key={message.id} className="flex items-start space-x-4">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-lg">
+            <div key={message.id} className="flex items-start space-x-2 md:space-x-4">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm md:text-lg">
                   {message.user === "You"
                     ? "U"
-                    : message.user === "System"
-                    ? "S"
                     : "U"}
                 </span>
               </div>
               <div className="flex-1">
-                <div className="flex items-baseline space-x-3">
-                  <span className="font-semibold text-white">
+                <div className="flex items-baseline space-x-2 md:space-x-3">
+                  <span className="font-semibold text-white text-sm md:text-base">
                     {message.user}
                   </span>
-                  <span className="text-slate-400 text-sm">
+                  <span className="text-slate-400 text-xs md:text-sm">
                     {message.timestamp}
                   </span>
                 </div>
-                <div className="text-slate-300 mt-1">{message.text}</div>
+                <div className="text-slate-300 mt-1 text-sm md:text-base">{message.text}</div>
               </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Input */}
-        <div className="p-4 border-t border-slate-700 pb-20 md:pb-4">
-          <div className="flex items-center space-x-2">
+  {/* Message Input */}
+  <div className="px-2 py-4 md:p-4 border-t border-slate-700 pb-20 md:pb-4">
+          <div className="flex items-center space-x-1 md:space-x-2">
             <div className="relative">
               <button
                 onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-                className="p-2 text-slate-400 hover:text-white"
+                className="p-1 md:p-2 text-slate-400 hover:text-white"
               >
                 📤
               </button>
@@ -1984,18 +2061,18 @@ export default function Home() {
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && sendMessage()}
                 placeholder="Type your message..."
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-2 md:px-4 md:py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
               />
             </div>
             <button
               onClick={() => setShowPushToTalk(true)}
-              className="p-2 text-slate-400 hover:text-white"
+              className="p-1 md:p-2 text-slate-400 hover:text-white"
             >
               🎤
             </button>
             <button
               onClick={sendMessage}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-2 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm md:text-base"
             >
               Send
             </button>
@@ -2065,11 +2142,11 @@ export default function Home() {
               <button
                 onClick={() => {
                   if (newChannelName.trim()) {
-                    const newChannel = {
+                    const newChannel: Channel = {
                       id: Date.now(),
                       name: newChannelName.trim(),
                       description: newChannelDescription.trim(),
-                      visibility: newChannelVisibility,
+                      visibility: newChannelVisibility as "public" | "private",
                       doorNumber: newChannelDoorNumber.trim(),
                       unread: 0,
                       active: false,
@@ -3393,12 +3470,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mobile Navigation */}
-      <MobileNavigation
-        activeTab={activeMobileTab}
-        onTabChange={setActiveMobileTab}
-        onSearch={() => setShowGlobalSearch(true)}
-      />
+      
 
       {/* Signature Manager Modal */}
       {showSignatureManager && (
@@ -4212,12 +4284,77 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mobile Navigation */}
-      <MobileNavigation
-        activeTab={activeMobileTab}
-        onTabChange={setActiveMobileTab}
-        onSearch={() => setShowGlobalSearch(true)}
-      />
+  {/* Mobile Navigation moved to layout to be consistent across routes */}
+      
+      {/* Mobile Slide-over Menu */}
+      {showMobileMenu && (
+        <div
+          className="md:hidden fixed inset-0 z-50 flex"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div
+            className="flex-1 bg-black/50"
+            onClick={() => setShowMobileMenu(false)}
+          />
+          <div className="w-4/5 max-w-sm h-full bg-slate-800 border-l border-slate-700 shadow-xl flex flex-col">
+            <div className="h-12 flex items-center justify-between px-3 border-b border-slate-700">
+              <span className="font-semibold">Menu</span>
+              <button
+                onClick={() => setShowMobileMenu(false)}
+                className="p-2 text-slate-300 hover:text-white"
+                aria-label="Close Menu"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              <button
+                onClick={() => {
+                  setShowGlobalSearch(true);
+                  setShowMobileMenu(false);
+                }}
+                className="w-full flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg"
+              >
+                <span className="text-lg">🔍</span>
+                <span>Search</span>
+              </button>
+              <div className="border-t border-slate-700 my-2" />
+              <button className="w-full flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">👥</span>
+                <span>Add users</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">📧</span>
+                <span>Invite users</span>
+              </button>
+              <div className="border-t border-slate-700 my-2" />
+              <button className="w-full flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">📊</span>
+                <span>Channel analytics</span>
+              </button>
+              <button className="w-full flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">🔧</span>
+                <span>Channel settings</span>
+              </button>
+              <div className="border-t border-slate-700 my-2" />
+              <button className="w-full flex items-center space-x-3 p-3 text-red-400 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">🚪</span>
+                <span>Leave channel</span>
+              </button>
+              <div className="border-t border-slate-700 my-2" />
+              <Link href="/documents" onClick={() => setShowMobileMenu(false)} className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">📁</span>
+                <span>Documents</span>
+              </Link>
+              <Link href="/activity" onClick={() => setShowMobileMenu(false)} className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+                <span className="text-lg">🔔</span>
+                <span>Activity</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

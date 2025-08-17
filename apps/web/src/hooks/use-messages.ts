@@ -18,81 +18,61 @@ export interface Message {
 // Global message store to persist messages across component re-renders
 const messageStore: Record<string, Message[]> = {};
 
+// Clean up any existing system messages from the store
+const cleanSystemMessages = () => {
+  Object.keys(messageStore).forEach((channelId) => {
+    messageStore[channelId] = messageStore[channelId].filter(
+      (m) => m.author?.name?.toLowerCase() !== "system"
+    );
+  });
+};
+
+// Function to completely clear all messages (for debugging)
+export const clearAllMessages = () => {
+  Object.keys(messageStore).forEach((channelId) => {
+    messageStore[channelId] = [];
+  });
+  console.log("All messages cleared from store");
+};
+
+// Function to inspect current messages (for debugging)
+export const inspectMessages = () => {
+  console.log("Current message store:", messageStore);
+  return messageStore;
+};
+
+// Run cleanup on module load
+cleanSystemMessages();
+
+// Expose debugging functions globally in development
+if (typeof window !== "undefined") {
+  (window as any).clearAllMessages = clearAllMessages;
+  (window as any).inspectMessages = inspectMessages;
+  (window as any).cleanSystemMessages = cleanSystemMessages;
+}
+
 export function useMessages(channelId: string) {
   const [messages, setMessages] = useState<Message[]>(
-    messageStore[channelId] || []
+    (messageStore[channelId] || []).filter(
+      (m) => m.author?.name?.toLowerCase() !== "system"
+    )
   );
   const [isLoading, setIsLoading] = useState(!messageStore[channelId]);
 
   useEffect(() => {
-    // Only load mock messages if we don't have any for this channel
+    // Do not seed any mock/system messages automatically
     if (!messageStore[channelId]) {
-      const timer = setTimeout(() => {
-        const mockMessages: Message[] = [
-          {
-            id: generateId(),
-            content: "Hey everyone! Welcome to ChatDO! 🚀",
-            author: {
-              id: "1",
-              name: "Alex Chen",
-              avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-            },
-            timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-            channelId,
-          },
-          {
-            id: generateId(),
-            content: "Thanks Alex! This looks amazing. I love the dark theme!",
-            author: {
-              id: "2",
-              name: "Sarah Johnson",
-              avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-            },
-            timestamp: new Date(Date.now() - 1000 * 60 * 25), // 25 minutes ago
-            channelId,
-          },
-          {
-            id: generateId(),
-            content:
-              "The UI is really clean and modern. Great work on the design!",
-            author: {
-              id: "3",
-              name: "Mike Rodriguez",
-              avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike",
-            },
-            timestamp: new Date(Date.now() - 1000 * 60 * 20), // 20 minutes ago
-            channelId,
-          },
-          {
-            id: generateId(),
-            content: "Has anyone tried the voice channels yet?",
-            author: {
-              id: "1",
-              name: "Alex Chen",
-              avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-            },
-            timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-            channelId,
-          },
-          {
-            id: generateId(),
-            content: "Not yet, but I'm excited to test them out!",
-            author: {
-              id: "2",
-              name: "Sarah Johnson",
-              avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-            },
-            timestamp: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
-            channelId,
-          },
-        ];
-
-        messageStore[channelId] = mockMessages;
-        setMessages(mockMessages);
-        setIsLoading(false);
-      }, 1000);
-
-      return () => clearTimeout(timer);
+      messageStore[channelId] = [];
+      setMessages([]);
+      setIsLoading(false);
+    } else {
+      // Filter out any existing system messages from the store
+      const filteredMessages = messageStore[channelId].filter(
+        (m) => m.author?.name?.toLowerCase() !== "system"
+      );
+      messageStore[channelId] = filteredMessages;
+      setMessages(filteredMessages);
+      setIsLoading(false);
     }
   }, [channelId]);
 

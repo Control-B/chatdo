@@ -44,11 +44,7 @@ export const useChatStore = create<ChatState>()(
           name: "general",
           type: "text",
           unreadCount: 0,
-          lastMessage: {
-            content: "Welcome to ChatDO!",
-            timestamp: new Date(),
-            author: "System",
-          },
+          // No seeded system lastMessage
         },
         {
           id: "random",

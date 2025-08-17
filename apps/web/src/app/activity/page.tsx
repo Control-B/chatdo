@@ -59,11 +59,11 @@ export default function ActivityPage() {
     {
       id: 6,
       type: "system",
-      user: "System",
+      user: "Workspace",
       action: "channel created",
       content: "New channel #emergency has been created",
       timestamp: "4 hours ago",
-      avatar: "S",
+      avatar: "W",
       priority: "normal",
     },
   ]);
@@ -109,9 +109,9 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-900 text-white pb-20 md:pb-0">
       {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 p-6">
+  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link

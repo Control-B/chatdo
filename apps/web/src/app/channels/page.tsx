@@ -89,14 +89,15 @@ export default function ChannelsPage() {
   const [filterVisibility, setFilterVisibility] = useState("all");
   const [sortBy, setSortBy] = useState("name");
   const [channels, setChannels] = useState(mockChannels);
+  // State for delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [channelToDelete, setChannelToDelete] = useState(null);
+  const [channelToDelete, setChannelToDelete] = useState<any>(null);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
   });
-  const [contextMenuChannel, setContextMenuChannel] = useState(null);
+  const [contextMenuChannel, setContextMenuChannel] = useState<any>(null);
 
   const filteredChannels = channels
     .filter((channel) => {
@@ -128,28 +129,28 @@ export default function ChannelsPage() {
     });
 
   // Delete functions
-  const handleDeleteChannel = (channel) => {
+  const handleDeleteChannel = (channel: any) => {
     setChannelToDelete(channel);
     setShowDeleteModal(true);
   };
 
   const confirmDeleteChannel = () => {
     if (channelToDelete) {
-      setChannels(channels.filter((ch) => ch.id !== channelToDelete.id));
+      setChannels(channels.filter((ch: any) => ch.id !== channelToDelete.id));
       setShowDeleteModal(false);
       setChannelToDelete(null);
     }
   };
 
   // Context menu functions
-  const handleChannelContextMenu = (e, channel) => {
+  const handleChannelContextMenu = (e: any, channel: any) => {
     e.preventDefault();
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setContextMenuChannel(channel);
     setShowContextMenu(true);
   };
 
-  const handleContextMenuAction = (action) => {
+  const handleContextMenuAction = (action: string) => {
     if (!contextMenuChannel) return;
 
     switch (action) {
@@ -185,7 +186,7 @@ export default function ChannelsPage() {
       setShowContextMenu(false);
     };
 
-    const handleEscapeKey = (e) => {
+    const handleEscapeKey = (e: any) => {
       if (e.key === "Escape") {
         setShowContextMenu(false);
       }
@@ -202,9 +203,9 @@ export default function ChannelsPage() {
   }, [showContextMenu]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 p-6">
+    <div className="min-h-screen bg-slate-900 text-white pb-24 md:pb-0">
+      {/* Header (desktop only) */}
+  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center space-x-4">
           <Link
             href="/"
@@ -224,7 +225,7 @@ export default function ChannelsPage() {
       </div>
 
       {/* Controls */}
-      <div className="p-6 border-b border-slate-700">
+  <div className="p-6 border-b border-slate-700">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -264,7 +265,7 @@ export default function ChannelsPage() {
       </div>
 
       {/* Channels List */}
-      <div className="p-6">
+  <div className="p-6">
         <div className="grid gap-4">
           {filteredChannels.map((channel) => (
             <div

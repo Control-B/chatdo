@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface MobileNavigationProps {
   activeTab: string;
@@ -14,6 +15,7 @@ export default function MobileNavigation({
   onTabChange,
   onSearch,
 }: MobileNavigationProps) {
+  const router = useRouter();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const tabs = [
@@ -21,13 +23,13 @@ export default function MobileNavigation({
       id: "home",
       label: "Home",
       icon: "🏠",
-      href: "/home",
+  href: "/channels",
     },
     {
       id: "dms",
       label: "DMs",
       icon: "💬",
-      href: "/dms",
+  href: "/direct-messages",
     },
     {
       id: "files",
@@ -53,8 +55,12 @@ export default function MobileNavigation({
     if (tabId === "more") {
       setShowMoreMenu(!showMoreMenu);
     } else {
+      const target = tabs.find((t) => t.id === tabId);
       onTabChange(tabId);
       setShowMoreMenu(false);
+      if (target && target.href && target.href !== "#") {
+        router.push(target.href);
+      }
     }
   };
 
@@ -68,45 +74,82 @@ export default function MobileNavigation({
   return (
     <>
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 z-50">
-        <div className="flex items-center justify-around py-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`flex flex-col items-center justify-center w-full py-2 px-1 transition-colors ${
-                activeTab === tab.id
-                  ? "text-blue-400"
-                  : "text-slate-400 hover:text-slate-300"
-              }`}
-            >
-              <span className="text-xl mb-1">{tab.icon}</span>
-              <span className="text-xs font-medium">{tab.label}</span>
-            </button>
-          ))}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 z-[100] pointer-events-auto"
+        role="tablist"
+        aria-label="Bottom Navigation"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="flex items-stretch justify-around py-1">
+          {tabs.map((tab) =>
+            tab.id === "more" ? (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                className={`flex flex-col items-center justify-center flex-1 py-2 px-2 transition-colors touch-manipulation pointer-events-auto ${
+                  activeTab === tab.id
+                    ? "text-blue-400"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <span className="text-2xl mb-0.5 leading-none">{tab.icon}</span>
+                <span className="text-[11px] font-medium">{tab.label}</span>
+              </button>
+            ) : (
+              <Link
+                key={tab.id}
+                href={tab.href}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                className={`flex flex-col items-center justify-center flex-1 py-2 px-2 transition-colors touch-manipulation ${
+                  activeTab === tab.id
+                    ? "text-blue-400"
+                    : "text-slate-300 hover:text-white"
+                }`}
+                onTouchStart={(e) => {
+                  try {
+                    e.preventDefault();
+                  } catch {}
+                  onTabChange(tab.id);
+                  setShowMoreMenu(false);
+                  // Fallback navigation for some mobile PWAs
+                  try {
+                    router.push(tab.href);
+                  } catch {}
+                }}
+              >
+                <span className="text-2xl mb-0.5 leading-none">{tab.icon}</span>
+                <span className="text-[11px] font-medium">{tab.label}</span>
+              </Link>
+            )
+          )}
         </div>
       </div>
 
       {/* More Menu Modal */}
-      {showMoreMenu && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50"
-          onClick={() => setShowMoreMenu(false)}
-        >
+    {showMoreMenu && (
+        <div className="md:hidden fixed inset-0 z-[110] pointer-events-none">
           <div
-            className="absolute bottom-20 left-4 right-4 bg-slate-800 rounded-lg shadow-xl"
+            className="absolute inset-0 bg-black/50 pointer-events-auto"
+            onClick={() => setShowMoreMenu(false)}
+          />
+          <div
+            className="pointer-events-auto w-full absolute bottom-0 bg-slate-800 rounded-t-xl shadow-xl max-h-[70vh] overflow-y-auto"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 space-y-2">
               <Link
-                href="/home"
+                href="/channels"
                 className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg"
               >
                 <span className="text-lg">🏠</span>
-                <span>Dashboard</span>
+                <span>All Channels</span>
               </Link>
               <Link
-                href="/dms"
+                href="/direct-messages"
                 className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg"
               >
                 <span className="text-lg">💬</span>
@@ -127,7 +170,7 @@ export default function MobileNavigation({
                 <span>Activity Feed</span>
               </Link>
               <div className="border-t border-slate-700 my-2"></div>
-              <button 
+              <button
                 onClick={handleSearch}
                 className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg w-full text-left"
               >

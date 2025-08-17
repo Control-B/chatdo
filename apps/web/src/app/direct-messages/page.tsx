@@ -3,8 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 
+// Types
+type DMStatus = "online" | "away" | "offline";
+type DM = {
+  id: number;
+  name: string;
+  avatar: string;
+  unread: number;
+  phone: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  status: DMStatus;
+};
+type StatusFilter = "all" | DMStatus;
+type SortBy = "name" | "unread" | "lastMessage" | "status";
+
 // Mock data - in real app this would come from API
-const mockDMs = [
+const mockDMs: DM[] = [
   {
     id: 1,
     name: "John Driver",
@@ -79,11 +94,11 @@ const mockDMs = [
 
 export default function DirectMessagesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
-  const [dms, setDms] = useState(mockDMs);
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("name");
+  const [dms, setDms] = useState<DM[]>(mockDMs);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [dmToDelete, setDmToDelete] = useState(null);
+  const [dmToDelete, setDmToDelete] = useState<DM | null>(null);
 
   const filteredDMs = dms
     .filter((dm) => {
@@ -108,7 +123,11 @@ export default function DirectMessagesPage() {
             new Date(a.lastMessageTime).getTime()
           );
         case "status":
-          const statusOrder = { online: 1, away: 2, offline: 3 };
+          const statusOrder: Record<DMStatus, number> = {
+            online: 1,
+            away: 2,
+            offline: 3,
+          };
           return statusOrder[a.status] - statusOrder[b.status];
         default:
           return 0;
@@ -116,7 +135,7 @@ export default function DirectMessagesPage() {
     });
 
   // Delete functions
-  const handleDeleteDM = (dm) => {
+  const handleDeleteDM = (dm: DM) => {
     setDmToDelete(dm);
     setShowDeleteModal(true);
   };
@@ -129,7 +148,7 @@ export default function DirectMessagesPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: DMStatus) => {
     switch (status) {
       case "online":
         return "bg-green-500";
@@ -143,9 +162,9 @@ export default function DirectMessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 p-6">
+    <div className="min-h-screen bg-slate-900 text-white pb-24 md:pb-0">
+  {/* Header (desktop only) */}
+  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center space-x-4">
           <Link
             href="/"
@@ -165,8 +184,8 @@ export default function DirectMessagesPage() {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="p-6 border-b border-slate-700">
+  {/* Controls */}
+  <div className="p-6 border-b border-slate-700">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -183,7 +202,7 @@ export default function DirectMessagesPage() {
           <div className="flex gap-2">
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
               className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
@@ -194,7 +213,7 @@ export default function DirectMessagesPage() {
 
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => setSortBy(e.target.value as SortBy)}
               className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="name">Sort by Name</option>
@@ -207,7 +226,7 @@ export default function DirectMessagesPage() {
       </div>
 
       {/* DMs List */}
-      <div className="p-6">
+  <div className="p-6 pb-24 md:pb-6">
         <div className="grid gap-4">
           {filteredDMs.map((dm) => (
             <div

@@ -1,21 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: [
-      "images.unsplash.com",
-      "localhost",
-      // Azure Blob Storage domains - update with your storage account name
-      "*.blob.core.windows.net",
-    ],
-  },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
-  // Configure for Azure Static Web Apps
-  output: 'export',
+  // Use standalone for server runtime; Azure Static Web Apps supports Next.js SSR
+  output: "standalone",
   trailingSlash: true,
   images: {
+    // Avoid Next Image optimization in SWA
     unoptimized: true,
+    domains: ["images.unsplash.com", "localhost", "*.blob.core.windows.net"],
   },
 };
 

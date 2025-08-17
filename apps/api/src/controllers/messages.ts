@@ -10,12 +10,20 @@ import {
 export async function getMessages(req: Request, res: Response) {
   try {
     const { roomId, cursor, limit = 50 } = messagesQuerySchema.parse(req.query);
+    const limitNumber = typeof limit === "string" ? parseInt(limit) : limit;
     const userId = (req as any).user?.id;
 
     if (!userId) {
       return res.status(401).json({
         success: false,
         error: "Authentication required",
+      });
+    }
+
+    if (!roomId) {
+      return res.status(400).json({
+        success: false,
+        error: "Room ID is required",
       });
     }
 
@@ -28,15 +36,18 @@ export async function getMessages(req: Request, res: Response) {
       });
     }
 
-    // Build query
-    const where: any = { roomId };
+    // Build query based on room type
+    const roomType = await getRoomType(roomId);
+    const where: any =
+      roomType === "channel" ? { channelId: roomId } : { dmThreadId: roomId };
+
     if (cursor) {
       where.createdAt = { lt: new Date(cursor) };
     }
 
     const messages = await prisma.message.findMany({
       where,
-      take: limit,
+      take: limitNumber,
       orderBy: { createdAt: "desc" },
       include: {
         author: {
@@ -70,7 +81,7 @@ export async function getMessages(req: Request, res: Response) {
 
     // Get next cursor
     const nextCursor =
-      messages.length === limit
+      messages.length === limitNumber
         ? messages[messages.length - 1].createdAt.toISOString()
         : null;
 
@@ -79,7 +90,7 @@ export async function getMessages(req: Request, res: Response) {
       data: messages.reverse(), // Return in chronological order
       pagination: {
         nextCursor,
-        hasMore: messages.length === limit,
+        hasMore: messages.length === limitNumber,
       },
     });
   } catch (error) {
@@ -104,6 +115,13 @@ export async function createMessage(req: Request, res: Response) {
       });
     }
 
+    if (!roomId) {
+      return res.status(400).json({
+        success: false,
+        error: "Room ID is required",
+      });
+    }
+
     // Check if user has access to the room
     const hasAccess = await checkRoomAccess(roomId, userId);
     if (!hasAccess) {
@@ -117,26 +135,34 @@ export async function createMessage(req: Request, res: Response) {
     const roomType = await getRoomType(roomId);
 
     // Create message
+    const messageData: any = {
+      roomType,
+      authorId: userId,
+      content,
+      parentId,
+      attachments: attachments
+        ? {
+            create: attachments.map((att: any) => ({
+              filename: att.filename,
+              originalName: att.originalName,
+              mimeType: att.mimeType,
+              size: att.size,
+              url: att.url,
+              thumbnailUrl: att.thumbnailUrl,
+            })),
+          }
+        : undefined,
+    };
+
+    // Set the correct room field based on room type
+    if (roomType === "channel") {
+      messageData.channelId = roomId;
+    } else {
+      messageData.dmThreadId = roomId;
+    }
+
     const message = await prisma.message.create({
-      data: {
-        roomId,
-        roomType,
-        authorId: userId,
-        content,
-        parentId,
-        attachments: attachments
-          ? {
-              create: attachments.map((att) => ({
-                filename: att.filename,
-                originalName: att.originalName,
-                mimeType: att.mimeType,
-                size: att.size,
-                url: att.url,
-                thumbnailUrl: att.thumbnailUrl,
-              })),
-            }
-          : undefined,
-      },
+      data: messageData,
       include: {
         author: {
           select: {
@@ -280,7 +306,19 @@ export async function deleteMessage(req: Request, res: Response) {
         OR: [
           { authorId: userId },
           {
-            room: {
+            channel: {
+              workspace: {
+                members: {
+                  some: {
+                    userId,
+                    role: { in: ["owner", "admin"] },
+                  },
+                },
+              },
+            },
+          },
+          {
+            dmThread: {
               workspace: {
                 members: {
                   some: {
