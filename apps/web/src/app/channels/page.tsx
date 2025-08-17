@@ -203,9 +203,9 @@ export default function ChannelsPage() {
   }, [showContextMenu]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pb-24 md:pb-0">
+    <div className="min-h-screen bg-slate-900 text-white pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 overflow-x-hidden">
       {/* Header (desktop only) */}
-  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
+      <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center space-x-4">
           <Link
             href="/"
@@ -224,9 +224,14 @@ export default function ChannelsPage() {
         </div>
       </div>
 
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-slate-800 border-b border-slate-700 px-4 py-3 pt-16">
+        <h1 className="text-xl font-bold text-center">Channels</h1>
+      </div>
+
       {/* Controls */}
-  <div className="p-6 border-b border-slate-700">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="p-4 md:p-6 border-b border-slate-700">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
           {/* Search */}
           <div className="flex-1">
             <input
@@ -239,11 +244,11 @@ export default function ChannelsPage() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
             <select
               value={filterVisibility}
               onChange={(e) => setFilterVisibility(e.target.value)}
-              className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Channels</option>
               <option value="public">Public</option>
@@ -253,7 +258,7 @@ export default function ChannelsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="name">Sort by Name</option>
               <option value="members">Sort by Members</option>
@@ -265,68 +270,90 @@ export default function ChannelsPage() {
       </div>
 
       {/* Channels List */}
-  <div className="p-6">
-        <div className="grid gap-4">
+      <div className="p-4 md:p-6 px-3 md:px-6">
+        <div className="grid gap-3 md:gap-4">
           {filteredChannels.map((channel) => (
-            <div
+            <Link
               key={channel.id}
-              className="bg-slate-800 rounded-lg p-4 hover:bg-slate-750 transition-colors"
-              onContextMenu={(e) => handleChannelContextMenu(e, channel)}
+              href={`/?channel=${encodeURIComponent(channel.name)}`}
+              className="block"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-blue-300 text-lg">#</span>
-                    <h3 className="text-white font-semibold text-lg">
-                      {channel.name}
-                    </h3>
-                    {channel.visibility === "private" && (
-                      <span className="text-slate-500 text-sm">🔒</span>
-                    )}
-                    {channel.active && (
-                      <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded">
-                        Active
+              <div
+                className="bg-slate-800 rounded-lg p-3 md:p-4 hover:bg-slate-750 transition-colors cursor-pointer overflow-hidden"
+                onContextMenu={(e) => handleChannelContextMenu(e, channel)}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2 min-w-0">
+                      <span className="text-blue-300 text-lg shrink-0">#</span>
+                      <h3 className="text-white font-semibold text-lg truncate">
+                        {channel.name}
+                      </h3>
+                      {channel.visibility === "private" && (
+                        <span className="text-slate-500 text-sm">🔒</span>
+                      )}
+                      {channel.active && (
+                        <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded">
+                          Active
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-slate-400 mb-2 whitespace-normal break-words">
+                      {channel.description}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                      {channel.doorNumber && (
+                        <span className="flex items-center space-x-1">
+                          <span>🚪</span>
+                          <span>Door {channel.doorNumber}</span>
+                        </span>
+                      )}
+                      <span>{channel.memberCount} members</span>
+                      <span>
+                        Created {new Date(channel.createdAt).toLocaleDateString()}
                       </span>
-                    )}
+                      {channel.unread > 0 && (
+                        <span className="text-red-400 font-medium">
+                          {channel.unread} unread
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <p className="text-slate-400 mb-2">{channel.description}</p>
-
-                  <div className="flex items-center space-x-4 text-sm text-slate-500">
-                    {channel.doorNumber && (
-                      <span className="flex items-center space-x-1">
-                        <span>🚪</span>
-                        <span>Door {channel.doorNumber}</span>
-                      </span>
-                    )}
-                    <span>{channel.memberCount} members</span>
-                    <span>
-                      Created {new Date(channel.createdAt).toLocaleDateString()}
-                    </span>
-                    {channel.unread > 0 && (
-                      <span className="text-red-400 font-medium">
-                        {channel.unread} unread
-                      </span>
-                    )}
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto" onClick={(e) => e.preventDefault()}>
+                    <Link
+                      href={`/?channel=${encodeURIComponent(channel.name)}`}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Join
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log("Settings for:", channel.name);
+                      }}
+                      className="px-3 py-1 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors text-sm"
+                    >
+                      Settings
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteChannel(channel);
+                      }}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
+                    >
+                      Delete
+                    </button>
                   </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm">
-                    Join
-                  </button>
-                  <button className="px-3 py-1 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors text-sm">
-                    Settings
-                  </button>
-                  <button
-                    onClick={() => handleDeleteChannel(channel)}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
-                  >
-                    Delete
-                  </button>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

@@ -25,10 +25,5 @@ export default function GlobalMobileNavigation() {
     setActive(computed);
   }, [computed]);
 
-  return (
-    <MobileNavigation
-      activeTab={active}
-      onTabChange={setActive}
-    />
-  );
+  return <MobileNavigation activeTab={active} onTabChange={setActive} />;
 }

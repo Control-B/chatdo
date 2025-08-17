@@ -9,26 +9,34 @@ if (typeof window !== "undefined") {
   if (window.clearAllMessages) {
     window.clearAllMessages();
   }
-  
+
   if (window.cleanSystemMessages) {
     window.cleanSystemMessages();
   }
-  
+
   // Clear localStorage (just in case)
   Object.keys(localStorage).forEach((key) => {
-    if (key.includes("message") || key.includes("chat") || key.includes("channel")) {
+    if (
+      key.includes("message") ||
+      key.includes("chat") ||
+      key.includes("channel")
+    ) {
       console.log(`Removing localStorage key: ${key}`);
       localStorage.removeItem(key);
     }
   });
-  
+
   // Clear sessionStorage (just in case)
   Object.keys(sessionStorage).forEach((key) => {
-    if (key.includes("message") || key.includes("chat") || key.includes("channel")) {
+    if (
+      key.includes("message") ||
+      key.includes("chat") ||
+      key.includes("channel")
+    ) {
       console.log(`Removing sessionStorage key: ${key}`);
       sessionStorage.removeItem(key);
     }
   });
-  
+
   console.log("✅ Message clearing complete! Please refresh the page.");
 }

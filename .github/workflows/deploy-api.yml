@@ -1,12 +1,7 @@
-name: Deploy API to Azure Web App
+name: "DISABLED: Deploy API to Azure Web App"
 
 on:
-  push:
-    branches: [ main ]
-    paths: 
-      - 'apps/api/**'
-      - 'packages/shared/**'
-      - '.github/workflows/deploy-api.yml'
+  # Disabled to avoid conflicts with azd-based pipeline (azure-dev.yml)
   workflow_dispatch:
 
 env:
@@ -15,6 +10,7 @@ env:
 
 jobs:
   build-and-deploy:
+    if: ${{ false }} # disabled; use azure-dev.yml
     runs-on: ubuntu-latest
     
     steps:

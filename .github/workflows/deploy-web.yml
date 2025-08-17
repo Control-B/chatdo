@@ -1,11 +1,7 @@
-name: Deploy Frontend to Azure Static Web Apps
+name: "DISABLED: Deploy Frontend to Azure Static Web Apps"
 
 on:
-  push:
-    branches: [ main ]
-    paths: 
-      - 'apps/web/**'
-      - '.github/workflows/deploy-web.yml'
+  # Disabled to avoid conflicts with azd-based pipeline (azure-dev.yml)
   workflow_dispatch:
 
 env:
@@ -13,7 +9,7 @@ env:
 
 jobs:
   build-and-deploy:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: ${{ false }} # disabled; use azure-dev.yml
     runs-on: ubuntu-latest
     name: Build and Deploy
     steps:

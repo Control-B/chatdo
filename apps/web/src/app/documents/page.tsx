@@ -195,9 +195,9 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pb-20 md:pb-0">
+    <div className="min-h-screen bg-slate-900 text-white pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
       {/* Header */}
-  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
+      <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link
@@ -218,9 +218,14 @@ export default function DocumentsPage() {
         </div>
       </div>
 
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-slate-800 border-b border-slate-700 px-4 py-3 pt-16">
+        <h1 className="text-xl font-bold text-center">Documents ({filteredDocuments.length})</h1>
+      </div>
+
       {/* Filters and Search */}
-      <div className="p-6 border-b border-slate-700">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="p-4 md:p-6 border-b border-slate-700">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {/* Search */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -303,7 +308,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Documents Grid */}
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">
             Documents ({filteredDocuments.length})
@@ -322,11 +327,11 @@ export default function DocumentsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {filteredDocuments.map((doc) => (
               <div
                 key={doc.id}
-                className="bg-slate-800 border border-slate-700 rounded-lg p-4 hover:border-slate-600 transition-colors cursor-pointer"
+                className="bg-slate-800 border border-slate-700 rounded-lg p-3 md:p-4 hover:border-slate-600 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="text-3xl">{getFileIcon(doc.type)}</div>

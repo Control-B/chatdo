@@ -8,9 +8,6 @@ param appName string = 'chatdo'
 param location string = resourceGroup().location
 
 
-@description('Environment name (dev, staging, prod)')
-param environment string = 'prod'
-
 @description('PostgreSQL administrator login')
 param administratorLogin string = 'chatdoadmin'
 
@@ -39,18 +36,26 @@ var webFrontendName = '${appName}-web-${environmentName}-${uniqueSuffix}'
 var postgresServerName = '${appName}-postgres-${environmentName}-${uniqueSuffix}'
 var redisName = '${appName}-redis-${environmentName}-${uniqueSuffix}'
 // Storage account names must be 3-24 chars, lowercase letters and numbers only
+var envTokenLower = toLower(replace(environmentName, '-', ''))
 var storageUnique = toLower(uniqueString(subscription().id, resourceGroup().id, environmentName))
-var storageAccountName = 'chatdostg${substring(storageUnique, 0, 10)}'
+// Include env token for resource token compliance and keep within length limits
+var storageAccountName = toLower(substring('st${appName}${envTokenLower}${storageUnique}', 0, 24))
 // User-assigned managed identity
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: '${appName}-identity-${environment}-${uniqueSuffix}'
+  name: '${appName}-identity-${environmentName}-${uniqueSuffix}'
   location: location
+  tags: {
+    'azd-env-name': environmentName
+  }
 }
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServicePlanName
   location: location
+  tags: {
+    'azd-env-name': environmentName
+  }
   properties: {
     reserved: true
   }
@@ -65,6 +70,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   name: postgresServerName
   location: location
+  tags: {
+    'azd-env-name': environmentName
+  }
   sku: {
     name: 'Standard_B1ms'
     tier: 'Burstable'
@@ -106,6 +114,9 @@ resource postgresFirewallRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewal
 resource redisCache 'Microsoft.Cache/redis@2023-04-01' = {
   name: redisName
   location: location
+  tags: {
+    'azd-env-name': environmentName
+  }
   properties: {
     sku: {
       name: 'Basic'
@@ -124,6 +135,9 @@ resource redisCache 'Microsoft.Cache/redis@2023-04-01' = {
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
+  tags: {
+    'azd-env-name': environmentName
+  }
   sku: {
     name: 'Standard_LRS'
   }
@@ -209,6 +223,10 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
     siteConfig: {
   linuxFxVersion: 'NODE|20-lts'
       alwaysOn: true
+      cors: {
+        allowedOrigins: [ '*' ]
+        supportCredentials: false
+      }
       appSettings: [
         {
           name: 'NODE_ENV'
@@ -260,11 +278,21 @@ resource webFrontend 'Microsoft.Web/sites@2022-03-01' = {
     'azd-service-name': 'web'
     'azd-env-name': environmentName
   }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity.id}': {}
+    }
+  }
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
       linuxFxVersion: 'NODE|20-lts'
       alwaysOn: true
+      cors: {
+        allowedOrigins: [ '*' ]
+        supportCredentials: false
+      }
       appSettings: [
         {
           name: 'NODE_ENV'

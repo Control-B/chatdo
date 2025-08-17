@@ -35,7 +35,7 @@ jobs:
             --client-id "$AZURE_CLIENT_ID" \
             --federated-credential-provider "github" \
             --tenant-id "$AZURE_TENANT_ID"
-          
+
           # Set the subscription context explicitly
           az account set --subscription "$AZURE_SUBSCRIPTION_ID"
           az account show

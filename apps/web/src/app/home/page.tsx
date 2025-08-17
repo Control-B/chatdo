@@ -47,7 +47,7 @@ export default function HomePage() {
   ]);
 
   return (
-  <div className="min-h-screen bg-slate-900 text-white pt-12 md:pt-0 pb-24 md:pb-0">
+    <div className="min-h-screen bg-slate-900 text-white pt-12 md:pt-0 pb-24 md:pb-0">
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center justify-between">

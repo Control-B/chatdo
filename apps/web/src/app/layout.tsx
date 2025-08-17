@@ -43,13 +43,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-  <link rel="apple-touch-icon" href="/icon-192x192.png" />
-  <link rel="manifest" href="/manifest.json?v=20250817-2" crossOrigin="use-credentials" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link
+          rel="manifest"
+          href="/manifest.json?v=20250817-3"
+          crossOrigin="use-credentials"
+        />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="ChatDO" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
       </head>
       <body className={inter.className}>
         {children}

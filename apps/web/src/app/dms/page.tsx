@@ -27,7 +27,7 @@ export default function DMsPage() {
       id: 3,
       name: "Mike Mechanic",
       avatar: "MM",
-  lastMessage: "Vehicle inspection completed. All checks are good.",
+      lastMessage: "Vehicle inspection completed. All checks are good.",
       timestamp: "1 hour ago",
       unread: 5,
       online: false,
@@ -63,9 +63,9 @@ export default function DMsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex">
+    <div className="min-h-screen bg-slate-900 text-white flex overflow-x-hidden">
       {/* DMs List */}
-      <div className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
+  <div className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col hidden md:flex">
         {/* Header */}
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center justify-between">
@@ -125,10 +125,10 @@ export default function DMsPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+  <div className="flex-1 flex flex-col min-w-0">
         {/* Chat Header */}
-        <div className="h-16 bg-slate-800 border-b border-slate-700 flex items-center px-6">
-          <div className="flex items-center space-x-3">
+        <div className="h-16 bg-slate-800 border-b border-slate-700 flex items-center px-3 md:px-6">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="relative">
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">
@@ -140,7 +140,7 @@ export default function DMsPage() {
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-white truncate">
                 {selectedDM.name}
               </h2>
               <p className="text-sm text-slate-400">
@@ -151,7 +151,7 @@ export default function DMsPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+  <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-4">
           <div className="flex items-start space-x-4">
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">
@@ -185,21 +185,21 @@ export default function DMsPage() {
         </div>
 
         {/* Message Input */}
-        <div className="p-4 border-t border-slate-700">
-          <div className="flex items-center space-x-2">
-            <div className="flex-1">
+        <div className="p-3 md:p-4 border-t border-slate-700">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex-1 min-w-0">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && sendMessage()}
                 placeholder="Type your message..."
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 md:px-4 md:py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <button
               onClick={sendMessage}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="px-3 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors shrink-0"
             >
               Send
             </button>

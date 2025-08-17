@@ -109,9 +109,28 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pb-20 md:pb-0">
-      {/* Header */}
-  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
+    <div className="min-h-screen bg-slate-900 text-white pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 overflow-x-hidden relative z-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-slate-800 border-b border-slate-700 p-4 pt-16">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <span className="text-xl">←</span>
+            <span>Back to Chat</span>
+          </Link>
+        </div>
+        <div className="mt-4">
+          <h1 className="text-xl font-bold">Activity Feed</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Stay updated with workspace activities.
+          </p>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link
@@ -133,8 +152,8 @@ export default function ActivityPage() {
       </div>
 
       {/* Filters */}
-      <div className="p-6 border-b border-slate-700">
-        <div className="flex space-x-4">
+      <div className="p-4 md:p-6 border-b border-slate-700">
+        <div className="flex gap-3 overflow-x-auto md:overflow-visible pb-1 [-webkit-overflow-scrolling:touch]">
           <button
             onClick={() => setFilter("all")}
             className={`px-4 py-2 rounded-lg transition-colors ${
@@ -179,14 +198,14 @@ export default function ActivityPage() {
       </div>
 
       {/* Activity List */}
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="space-y-4">
           {filteredActivities.map((activity) => (
             <div
               key={activity.id}
               className={`bg-slate-800 border border-slate-700 rounded-lg p-4 border-l-4 ${getPriorityColor(
                 activity.priority
-              )} hover:bg-slate-750 transition-colors`}
+              )} hover:bg-slate-750 transition-colors overflow-hidden`}
             >
               <div className="flex items-start space-x-4">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -194,20 +213,22 @@ export default function ActivityPage() {
                     {activity.avatar}
                   </span>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2 min-w-0">
+                    <span className="text-lg shrink-0">
                       {getActivityIcon(activity.type)}
                     </span>
-                    <span className="font-semibold text-white">
+                    <span className="font-semibold text-white truncate">
                       {activity.user}
                     </span>
-                    <span className="text-slate-400">{activity.action}</span>
-                    <span className="text-slate-500 text-sm">
+                    <span className="text-slate-400 break-words">
+                      {activity.action}
+                    </span>
+                    <span className="text-slate-500 text-sm shrink-0">
                       {activity.timestamp}
                     </span>
                   </div>
-                  <p className="text-slate-300">{activity.content}</p>
+                  <p className="text-slate-300 break-words">{activity.content}</p>
                 </div>
                 {activity.priority === "high" && (
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>

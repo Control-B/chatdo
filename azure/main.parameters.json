@@ -2,14 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "environmentName": {
-      "value": "prod"
-    },
-    "location": {
-      "value": "eastus2"
-    },
-    "staticWebAppLocation": {
-      "value": "eastus2"
-    }
+    "environmentName": { "value": "${AZURE_ENV_NAME}" },
+    "location": { "value": "${AZURE_LOCATION}" },
+    "appName": { "value": "chatdo" },
+    "environment": { "value": "prod" },
+    "administratorLogin": { "value": "chatdoadmin" },
+    "administratorPassword": { "value": "" },
+    "jwtSecret": { "value": "" },
+    "nextAuthSecret": { "value": "" }
   }
 }

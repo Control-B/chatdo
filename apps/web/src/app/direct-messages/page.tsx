@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 // Types
@@ -162,9 +162,9 @@ export default function DirectMessagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pb-24 md:pb-0">
-  {/* Header (desktop only) */}
-  <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
+    <div className="min-h-screen bg-slate-900 text-white pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 overflow-x-hidden">
+      {/* Header (desktop only) */}
+      <div className="hidden lg:block bg-slate-800 border-b border-slate-700 p-6">
         <div className="flex items-center space-x-4">
           <Link
             href="/"
@@ -184,9 +184,14 @@ export default function DirectMessagesPage() {
         </div>
       </div>
 
-  {/* Controls */}
-  <div className="p-6 border-b border-slate-700">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-slate-800 border-b border-slate-700 px-4 py-3 pt-16">
+        <h1 className="text-xl font-bold text-center">Direct Messages</h1>
+      </div>
+
+      {/* Controls */}
+      <div className="p-4 md:p-6 border-b border-slate-700">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
           {/* Search */}
           <div className="flex-1">
             <input
@@ -199,11 +204,11 @@ export default function DirectMessagesPage() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
-              className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
               <option value="online">Online</option>
@@ -214,7 +219,7 @@ export default function DirectMessagesPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortBy)}
-              className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="name">Sort by Name</option>
               <option value="unread">Sort by Unread</option>
@@ -226,66 +231,84 @@ export default function DirectMessagesPage() {
       </div>
 
       {/* DMs List */}
-  <div className="p-6 pb-24 md:pb-6">
-        <div className="grid gap-4">
+  <div className="p-4 md:p-6 px-3 md:px-6 pb-4 md:pb-6">
+        <div className="grid gap-3 md:gap-4">
           {filteredDMs.map((dm) => (
-            <div
+            <Link
               key={dm.id}
-              className="bg-slate-800 rounded-lg p-4 hover:bg-slate-750 transition-colors"
+              href={`/?dm=${encodeURIComponent(dm.name)}`}
+              className="block"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">
-                        {dm.avatar}
-                      </span>
-                    </div>
-                    <div
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(
-                        dm.status
-                      )} rounded-full border-2 border-slate-800`}
-                    ></div>
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-white font-semibold">{dm.name}</h3>
-                      {dm.unread > 0 && (
-                        <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full">
-                          {dm.unread}
+              <div className="bg-slate-800 rounded-lg p-4 hover:bg-slate-750 transition-colors cursor-pointer overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center space-x-4 min-w-0">
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          {dm.avatar}
                         </span>
-                      )}
+                      </div>
+                      <div
+                        className={`absolute -bottom-1 -right-1 w-4 h-4 ${getStatusColor(
+                          dm.status
+                        )} rounded-full border-2 border-slate-800`}
+                      ></div>
                     </div>
 
-                    <p className="text-slate-400 text-sm mb-1">{dm.phone}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1 min-w-0">
+                        <h3 className="text-white font-semibold truncate">{dm.name}</h3>
+                        {dm.unread > 0 && (
+                          <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full">
+                            {dm.unread}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="flex items-center space-x-2 text-sm text-slate-500">
-                      <span className="capitalize">{dm.status}</span>
-                      <span>•</span>
-                      <span>{dm.lastMessage}</span>
-                      <span>•</span>
-                      <span>{dm.lastMessageTime}</span>
+                      <p className="text-slate-400 text-sm mb-1 truncate">{dm.phone}</p>
+
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+                        <span className="capitalize">{dm.status}</span>
+                        <span>•</span>
+                        <span className="break-words">{dm.lastMessage}</span>
+                        <span>•</span>
+                        <span>{dm.lastMessageTime}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex space-x-2">
-                  <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm">
-                    Message
-                  </button>
-                  <button className="px-3 py-1 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors text-sm">
-                    Call
-                  </button>
-                  <button
-                    onClick={() => handleDeleteDM(dm)}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex flex-wrap gap-2 sm:gap-2 w-full sm:w-auto" onClick={(e) => e.preventDefault()}>
+                    <Link
+                      href={`/?dm=${encodeURIComponent(dm.name)}`}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Message
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log("Call:", dm.name);
+                      }}
+                      className="px-3 py-1 bg-slate-600 text-white rounded hover:bg-slate-500 transition-colors text-sm"
+                    >
+                      Call
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteDM(dm);
+                      }}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

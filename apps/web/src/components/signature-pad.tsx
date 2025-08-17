@@ -97,7 +97,7 @@ export default function SignaturePad({ onSave, onCancel }: SignaturePadProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[200]">
       <div className="bg-white p-6 rounded-lg w-[500px] max-w-[90vw]">
         <h3 className="text-gray-800 text-lg font-semibold mb-4">
           Sign Document

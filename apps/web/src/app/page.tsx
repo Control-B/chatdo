@@ -667,6 +667,36 @@ export default function Home() {
   };
 
   // Keyboard shortcuts
+  // Handle URL parameters on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const channelParam = urlParams.get("channel");
+      const dmParam = urlParams.get("dm");
+      
+      if (channelParam) {
+        setCurrentChannel(channelParam);
+        setCurrentDM(null);
+        setChannels(prev =>
+          prev.map((ch) => ({
+            ...ch,
+            active: ch.name === channelParam,
+            unread: 0,
+          }))
+        );
+      } else if (dmParam) {
+        const targetDM = directMessages.find(dm => dm.name === dmParam);
+        if (targetDM) {
+          setCurrentDM(targetDM);
+          setCurrentChannel(null);
+          setDirectMessages(prev =>
+            prev.map((d) => (d.id === targetDM.id ? { ...d, unread: 0 } : d))
+          );
+        }
+      }
+    }
+  }, [directMessages]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl+K or Cmd+K to open global search
@@ -790,7 +820,7 @@ export default function Home() {
   const [channelMessages, setChannelMessages] = useState<
     Record<string, ChatMessage[]>
   >({
-  // No seeded system messages
+    // No seeded system messages
   });
 
   // Clean up any system messages on component mount
@@ -1288,9 +1318,9 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-slate-900 text-white flex flex-col md:flex-row">
-  {/* Mobile Top Bar hidden per spec (use only hamburger via bottom More) */}
-  <div className="hidden" />
+    <div className="h-screen bg-slate-900 text-white flex flex-col md:flex-row overflow-x-hidden">
+      {/* Mobile Top Bar hidden per spec (use only hamburger via bottom More) */}
+      <div className="hidden" />
       {/* Sidebar - Hidden on mobile, visible on desktop */}
       <div
         className={`hidden md:flex ${
@@ -1810,7 +1840,7 @@ export default function Home() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col md:flex-1">
+  <div className="flex-1 flex flex-col md:flex-1 min-w-0">
         {/* Desktop Header (hidden on mobile) */}
         <div className="hidden md:flex h-12 bg-slate-800 border-b border-slate-700 items-center px-4">
           <div className="flex items-center space-x-3">
@@ -1915,20 +1945,21 @@ export default function Home() {
           </div>
         </div>
 
-  {/* Messages */}
-  <div className="flex-1 overflow-y-auto px-2 py-4 md:p-6 space-y-4 md:space-y-6 pb-20 md:pb-4 pt-2 md:pt-0">
+        {/* Messages */}
+  <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 md:p-6 space-y-4 md:space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-4 pt-16 md:pt-0">
           {(currentChannel
             ? (channelMessages[currentChannel] || []).filter(
                 (m) => m.user?.toLowerCase?.() !== "system"
               )
             : messages.filter((m) => m.user?.toLowerCase?.() !== "system")
           ).map((message) => (
-            <div key={message.id} className="flex items-start space-x-2 md:space-x-4">
+            <div
+              key={message.id}
+              className="flex items-start space-x-2 md:space-x-4"
+            >
               <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm md:text-lg">
-                  {message.user === "You"
-                    ? "U"
-                    : "U"}
+                  {message.user === "You" ? "U" : "U"}
                 </span>
               </div>
               <div className="flex-1">
@@ -1940,16 +1971,18 @@ export default function Home() {
                     {message.timestamp}
                   </span>
                 </div>
-                <div className="text-slate-300 mt-1 text-sm md:text-base">{message.text}</div>
+                <div className="text-slate-300 mt-1 text-sm md:text-base">
+                  {message.text}
+                </div>
               </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
 
-  {/* Message Input */}
-  <div className="px-2 py-4 md:p-4 border-t border-slate-700 pb-20 md:pb-4">
-          <div className="flex items-center space-x-1 md:space-x-2">
+        {/* Message Input */}
+        <div className="px-2 py-4 md:p-4 border-t border-slate-700 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-4">
+          <div className="flex flex-wrap items-center gap-2 md:gap-2">
             <div className="relative">
               <button
                 onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
@@ -2054,7 +2087,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <div className="flex-1 relative">
+            <div className="flex-1 min-w-0 relative">
               <input
                 type="text"
                 value={newMessage}
@@ -2066,13 +2099,13 @@ export default function Home() {
             </div>
             <button
               onClick={() => setShowPushToTalk(true)}
-              className="p-1 md:p-2 text-slate-400 hover:text-white"
+              className="p-1 md:p-2 text-slate-400 hover:text-white shrink-0"
             >
               🎤
             </button>
             <button
               onClick={sendMessage}
-              className="px-2 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm md:text-base"
+              className="px-2 py-2 md:px-4 md:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm md:text-base shrink-0"
             >
               Send
             </button>
@@ -3470,8 +3503,6 @@ export default function Home() {
         </div>
       )}
 
-      
-
       {/* Signature Manager Modal */}
       {showSignatureManager && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -4284,8 +4315,8 @@ export default function Home() {
         </div>
       )}
 
-  {/* Mobile Navigation moved to layout to be consistent across routes */}
-      
+      {/* Mobile Navigation moved to layout to be consistent across routes */}
+
       {/* Mobile Slide-over Menu */}
       {showMobileMenu && (
         <div
@@ -4343,11 +4374,19 @@ export default function Home() {
                 <span>Leave channel</span>
               </button>
               <div className="border-t border-slate-700 my-2" />
-              <Link href="/documents" onClick={() => setShowMobileMenu(false)} className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+              <Link
+                href="/documents"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg"
+              >
                 <span className="text-lg">📁</span>
                 <span>Documents</span>
               </Link>
-              <Link href="/activity" onClick={() => setShowMobileMenu(false)} className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg">
+              <Link
+                href="/activity"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center space-x-3 p-3 text-slate-300 hover:bg-slate-700 rounded-lg"
+              >
                 <span className="text-lg">🔔</span>
                 <span>Activity</span>
               </Link>
