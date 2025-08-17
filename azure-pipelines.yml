@@ -1,0 +1,55 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # Adjust if you use a different azd env name or region
+  AZURE_ENV_NAME: ChatDO
+  AZURE_LOCATION: eastus2
+  AZURE_SUBSCRIPTION_ID: 4a99754d-13d1-420b-a421-856ece101a0f
+
+stages:
+  - stage: build_and_deploy
+    displayName: Build and Deploy with azd
+    jobs:
+      - job: deploy
+        displayName: Deploy
+        steps:
+          - checkout: self
+
+          # Authenticate to Azure via an Azure Resource Manager service connection
+          # Create this in Azure DevOps Project Settings > Service connections
+          # Name it exactly as below or change 'azureSubscription' to match your name
+          - task: AzureCLI@2
+            displayName: Install azd and deploy
+            inputs:
+              azureSubscription: ChatDO-Connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                echo "Installing Azure Developer CLI (azd)" 
+                curl -fsSL https://aka.ms/install-azd.sh | bash
+                azd version
+
+                echo "Azure account context:" 
+                az account show --query "{name:name, id:id, tenantId:tenantId}" -o table || true
+
+                echo "Set azd environment variables"
+                export AZURE_ENV_NAME=$(AZURE_ENV_NAME)
+                export AZURE_LOCATION=$(AZURE_LOCATION)
+                export AZURE_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
+
+                echo "Provision (idempotent) and Deploy"
+                azd provision --no-prompt
+                azd deploy --no-prompt
+            workingDirectory: $(System.DefaultWorkingDirectory)
